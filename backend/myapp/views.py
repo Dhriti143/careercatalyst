@@ -1,9 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from django.http import HttpResponse,FileResponse,Http404,JsonResponse,HttpResponseBadRequest
 from django.contrib.auth.models import auth,User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
-import os
 from pathlib import Path
 from .models import MyModel,Job,activeJobs
 from django.core.files.base import ContentFile
@@ -14,12 +12,16 @@ import io
 import nltk
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
-import jwt
-import datetime
 from .serializers import UserSerializer,MyModelSerializer,JobSerializer
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
+from django.core.files.base import ContentFile
+from django.db import transaction
+from django.contrib.sessions.models import Session
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from .models import Job, MyModel
 
 def home(request):
     return render(request,'home.html')
@@ -98,9 +100,6 @@ def get_logged_in_user(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-from django.core.files.base import ContentFile
-from django.db import transaction
-from django.core.files.uploadedfile import InMemoryUploadedFile
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_pdf(request):
@@ -268,8 +267,7 @@ def getUserData(request):
 #         job.save()
 
 #         return JsonResponse({'message': 'Job successfully added to the user profile.'})
-#CHANGE HERRE
-from django.contrib.auth.decorators import login_required
+
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated]) 
 # @login_required
@@ -319,16 +317,14 @@ def add_job_to_profile(request):
             link=job_link
         )
 
-
-# #         # Save both user and job objects
-#         # user.save()
-#         # job.save()
+# Save both user and job objects
+# user.save()
+# job.save()
         return JsonResponse({'message': 'Job successfully added to the user profile.'},status=210)
     else:
         # Handle other HTTP methods if needed
         return JsonResponse({'message': 'Invalid request method.'}, status=400)
-from django.contrib.sessions.models import Session
-from django.contrib.auth import get_user_model
+
 def get_username_from_session_id(session_id):
     try:
         # Retrieve the session from the database
@@ -347,9 +343,7 @@ def get_username_from_session_id(session_id):
     except (Session.DoesNotExist, get_user_model().DoesNotExist, KeyError) as e:
         # Handle exceptions (e.g., session not found, user not found)
         return None
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import Job, MyModel
+
 @api_view(['GET'])
 def get_all_jobs(request):
     session_id = request.COOKIES.get('sessionid')
@@ -502,7 +496,7 @@ def getskillsfromdesc(jobdesc):
     # Print the extracted skills
     return extracted_skills
 
-from django.shortcuts import get_object_or_404
+
 
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated]) 
